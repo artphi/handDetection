@@ -43,7 +43,7 @@ class HDproject(object):
 		self.cap = cv2.VideoCapture(0)
 		self.thread = np.zeros((60,60),np.uint8)
 		self.faceD = np.zeros((60,60),np.uint8)
-		self.turn = 0
+
 		#Start
 		a = fd(self)
 
@@ -53,21 +53,26 @@ class HDproject(object):
 		cv2.destroyAllWindows()
 
 	## ------------------------------------------------------------
+	# main function
 	def run(self):
 		run = True
 		while(run):
+			# get the video frame from main camera
 			ret, self.orig_im = self.cap.read()
+			# flip the image horizontally
 			self.orig_im = cv2.flip(self.orig_im,1)
+
+			#Thread for face detection
 			self.thread = self.orig_im.copy()
-				#faceDetect = self.faceDetection(self.orig_im)
-				
-			self.turn += 1
-			self.turn = self.turn%10
+
+
 			skin = self.skinExtraction(self.yCrCbConversion(self.orig_im))
 			skin = cv2.bitwise_not(skin)
-			#skin = cv2.add(skin,self.faceD)
+
+			# Find the contours
 			contours = cv2.findContours(skin,cv2.RETR_LIST,cv2.CHAIN_APPROX_NONE)[0]
 			for cnt in contours:
+				# Select the big area
 				if cv2.contourArea(cnt) > 10000:
 					
 					hull = cv2.convexHull(cnt,returnPoints = False)
@@ -82,12 +87,9 @@ class HDproject(object):
 							cv2.line(self.orig_im,start,end,[0,255,0],2)
 							cv2.circle(self.orig_im,far,5,[0,0,255],-1)
 					except: pass
-					moments = cv2.moments(cnt)
-					try:
-						centroid_x = int(moments['m10']/moments['m00'])
-						centroid_y = int(moments['m01']/moments['m00'])
-						cv2.circle(self.orig_im, (centroid_x, centroid_y), 20, (0,255,255), 10)
-					except Exception as detail: print detail
+
+					self.handCenter(cv2.moments(cnt))
+					
 
 			# Debuging tools
 			if self.debug:
@@ -108,9 +110,20 @@ class HDproject(object):
 			
 		# Release the camera
 		self.cap.release()
-		
 
 	## ------------------------------------------------------------
+	# Search and show the hand's center of mass
+	def handCenter(self, moments):
+		try:
+			centroid_x = int(moments['m10']/moments['m00'])
+			centroid_y = int(moments['m01']/moments['m00'])
+			cv2.circle(self.orig_im, (centroid_x, centroid_y), 20, (0,0,255), 1)
+			cv2.circle(self.orig_im, (centroid_x, centroid_y), 10, (0,0,255), 1)
+			cv2.circle(self.orig_im, (centroid_x, centroid_y), 5, (0,0,255), -1)
+		except Exception as detail: print detail
+
+	## ------------------------------------------------------------
+	# Save the parameters
 	def save(self):
 		self.Vars["th_Y_min"] = self.th_Y_min
 		self.Vars["th_Y_max"] = self.th_Y_max
@@ -123,6 +136,8 @@ class HDproject(object):
 		
 
 	## ------------------------------------------------------------
+	# Convert the video in YCrCb and split it in three channels
+	# Return an array containing the 3 channels 
 	def yCrCbConversion(self,image):
 		#Try/Catch
 		try:
@@ -143,28 +158,28 @@ class HDproject(object):
 		except: pass
 
 	## ------------------------------------------------------------
+	# not implemented... Maybe one day...
 	def backGroundDetection(self):
 		pass
 
 	## ------------------------------------------------------------
+	# split an image
 	def channelsSplit(self,image):
 		return cv2.split(image)
+
 	## ------------------------------------------------------------
+	# Generate the thresolding for min and max values
 	def thresolding(self,image, min_th, max_th):
 		val, mask = cv2.threshold(image, min_th, 255, cv2.THRESH_BINARY)
 		val, mask_inv = cv2.threshold(image, max_th,255, cv2.THRESH_BINARY_INV)
 		return cv2.add(mask, mask_inv)
-	## ------------------------------------------------------------
-	def binarization(self):
-		pass
 
 	## ------------------------------------------------------------
-	def morphology(self):
-		pass
+	def morphology(self,image):
+		morpho = cv2.erode(image, cv2.getStructuringElement(cv2.MORPH_ELLIPSE,(17,17)))   
+		morpho = cv2.dilate(morpho,cv2.getStructuringElement(cv2.MORPH_ELLIPSE,(15,15)))
+		return morpho
 
-	## ------------------------------------------------------------
-	def faceRemoval(self):
-		pass
 	## ------------------------------------------------------------
 	def cannyEdgeSegmentation(self):
 		pass
@@ -180,11 +195,11 @@ class HDproject(object):
 			final = cv2.add(final,self.faceD)
 		except Exception as detail: print "error on mask ", detail
 
+		# maybe not useful...
+		#final = self.morphology(final)
 		
 		
-		
-		#final = cv2.erode(final, cv2.getStructuringElement(cv2.MORPH_ELLIPSE,(17,17)))   
-		#final = cv2.dilate(final,cv2.getStructuringElement(cv2.MORPH_ELLIPSE,(15,15)))
+
 		if self.debug:
 			cv2.imshow('y_img_mask',y_img)
 			cv2.imshow('cr_img_mask',cr_img)
