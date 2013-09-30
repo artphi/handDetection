@@ -17,7 +17,7 @@ To stop the program, please use the 'q' key, then on the terminal choose if you 
 
 Files description
 -----------------
-HDproject.py: Main Class
-faceDetection.py: Face detection class using haar. Threaded in main class
-.config: Config file
-haar: folder containing some haar XML
+* HDproject.py: Main Class
+* faceDetection.py: Face detection class using haar. Threaded in main class
+* .config: Config file
+* haar: folder containing some haar XML
