@@ -71,6 +71,7 @@ class HDproject(object):
 				if cv2.contourArea(cnt) > 10000:
 					
 					hull = cv2.convexHull(cnt,returnPoints = False)
+					
 					defects = cv2.convexityDefects(cnt,hull)
 					try:
 						for i in range(defects.shape[0]):
@@ -81,9 +82,12 @@ class HDproject(object):
 							cv2.line(self.orig_im,start,end,[0,255,0],2)
 							cv2.circle(self.orig_im,far,5,[0,0,255],-1)
 					except: pass
-					
-
-			
+					moments = cv2.moments(cnt)
+					try:
+						centroid_x = int(moments['m10']/moments['m00'])
+						centroid_y = int(moments['m01']/moments['m00'])
+						cv2.circle(self.orig_im, (centroid_x, centroid_y), 20, (0,255,255), 10)
+					except Exception as detail: print detail
 
 			# Debuging tools
 			if self.debug:
@@ -171,7 +175,7 @@ class HDproject(object):
 		cr_img = self.thresolding(image[1],self.th_CR_min, self.th_CR_max)
 		cb_img = self.thresolding(image[2],self.th_CB_min, self.th_CB_max)
 		final = cv2.add(cb_img,cr_img)
-		print self.faceD.size
+		
 		try:
 			final = cv2.add(final,self.faceD)
 		except Exception as detail: print "error on mask ", detail
