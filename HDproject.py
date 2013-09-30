@@ -63,8 +63,9 @@ class HDproject(object):
 			self.orig_im = cv2.flip(self.orig_im,1)
 
 			#Thread for face detection
-			self.thread = self.orig_im.copy()
-
+			try:
+				self.thread = self.orig_im.copy()
+			except: pass
 
 			skin = self.skinExtraction(self.yCrCbConversion(self.orig_im))
 			skin = cv2.bitwise_not(skin)
@@ -117,7 +118,7 @@ class HDproject(object):
 		try:
 			centroid_x = int(moments['m10']/moments['m00'])
 			centroid_y = int(moments['m01']/moments['m00'])
-			cv2.circle(self.orig_im, (centroid_x, centroid_y), 20, (0,0,255), 1)
+			cv2.circle(self.orig_im, (centroid_x, centroid_y), 15, (0,0,255), 1)
 			cv2.circle(self.orig_im, (centroid_x, centroid_y), 10, (0,0,255), 1)
 			cv2.circle(self.orig_im, (centroid_x, centroid_y), 5, (0,0,255), -1)
 		except Exception as detail: print detail
