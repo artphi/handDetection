@@ -1,6 +1,7 @@
 import pickle, cv2
 import threading
 import numpy as np
+from numpy import sqrt, arccos, rad2deg
 import sys
 from faceDetection import FaceDetection as fd
 class HDproject(object):
@@ -42,6 +43,9 @@ class HDproject(object):
 		#Camera Capture
 		try:
 			self.cap = cv2.VideoCapture(0)
+			if not self.cap.isOpened():
+				print "Cam not found. exiting..."
+				sys.exit(1)
 		except Exception as detail:
 			print "Error Initialization of the camera: ", detail
 			sys.exit(1)
@@ -60,12 +64,14 @@ class HDproject(object):
 	# main function
 	def run(self):
 		run = True
+
 		while(run):
 			# get the video frame from main camera
 			try:
 				ret, self.orig_im = self.cap.read()
 				# flip the image horizontally
-				self.orig_im = cv2.flip(self.orig_im,1)
+				if ret:
+					self.orig_im = cv2.flip(self.orig_im,1)
 			except Exception as detail:
 				print "error on reading camera: ", detail
 				sys.exit(1)
@@ -80,26 +86,41 @@ class HDproject(object):
 
 			# Find the contours
 			contours = cv2.findContours(skin,cv2.RETR_LIST,cv2.CHAIN_APPROX_NONE)[0]
+
+			allIdex = []
+			index_ = 0
 			for cnt in contours:
 				# Select the big area
 				if cv2.contourArea(cnt) > 10000:
 					
 					hull = cv2.convexHull(cnt,returnPoints = False)
-					
+					angles = []
 					defects = cv2.convexityDefects(cnt,hull)
+					if defects == None: return
 					try:
 						for i in range(defects.shape[0]):
 							s,e,f,d = defects[i,0]
-							start = tuple(cnt[s][0])
-							end = tuple(cnt[e][0])
-							far = tuple(cnt[f][0])
-							cv2.line(self.orig_im,start,end,[0,255,0],2)
-							cv2.circle(self.orig_im,far,5,[0,0,255],-1)
-					except: pass
+							if d > 2000:
+								start = tuple(cnt[s][0])
+								end = tuple(cnt[e][0])
+								far = tuple(cnt[f][0])
+								cv2.circle(self.orig_im,far,5,[0,0,255],-1)
+								cv2.line(self.orig_im,start,far,[0,255,0],2)
+								cv2.line(self.orig_im,far,end,[0,255,0],2)
+								angles.append(self.angle(far, start, end))
 
+					except Exception as detail: 
+						print detail
+						pass
+						
+					
 					self.handCenter(cv2.moments(cnt))
 					
+					b = filter(lambda a:a<90, angles)
+					fingers = len(b) + 1
+					print "finger = ", fingers
 
+					index_ += 1
 			# Debuging tools
 			if self.debug:
 				cv2.drawContours(self.orig_im,[cnt],-1,(0,255,0),-1)
@@ -120,6 +141,14 @@ class HDproject(object):
 		# Release the camera
 		self.cap.release()
 
+	## ------------------------------------------------------------
+	def angle(self, cent, rect1, rect2):
+		v1 = (rect1[0] - cent[0], rect1[1] - cent[1])
+		v2 = (rect2[0] - cent[0], rect2[1] - cent[1])
+		dist = lambda a:sqrt(a[0] ** 2 + a[1] ** 2)
+		angle = arccos((sum(map(lambda a, b:a*b, v1, v2))) / (dist(v1) * dist(v2)))
+		angle = abs(rad2deg(angle))
+		return angle
 	## ------------------------------------------------------------
 	# Search and show the hand's center of mass
 	def handCenter(self, moments):
