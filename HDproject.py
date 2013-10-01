@@ -68,6 +68,7 @@ class HDproject(object):
 				self.orig_im = cv2.flip(self.orig_im,1)
 			except Exception as detail:
 				print "error on reading camera: ", detail
+				sys.exit(1)
 
 			#Thread for face detection
 			try:
