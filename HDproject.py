@@ -40,7 +40,11 @@ class HDproject(object):
 		
 
 		#Camera Capture
-		self.cap = cv2.VideoCapture(0)
+		try:
+			self.cap = cv2.VideoCapture(0)
+		except Exception as detail:
+			print "Error Initialization of the camera: ", detail
+			sys.exit(1)
 		self.thread = np.zeros((60,60),np.uint8)
 		self.faceD = np.zeros((60,60),np.uint8)
 
@@ -58,9 +62,12 @@ class HDproject(object):
 		run = True
 		while(run):
 			# get the video frame from main camera
-			ret, self.orig_im = self.cap.read()
-			# flip the image horizontally
-			self.orig_im = cv2.flip(self.orig_im,1)
+			try:
+				ret, self.orig_im = self.cap.read()
+				# flip the image horizontally
+				self.orig_im = cv2.flip(self.orig_im,1)
+			except Exception as detail:
+				print "error on reading camera: ", detail
 
 			#Thread for face detection
 			try:
