@@ -32,7 +32,6 @@ Files description
 -----------------------------------------------------------------------------"""
 
 import pickle, cv2
-import threading
 import numpy as np
 from numpy import sqrt, arccos, rad2deg
 import sys
