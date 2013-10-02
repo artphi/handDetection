@@ -86,94 +86,102 @@ class HDproject(object):
 		self.faceD = np.zeros((60,60),np.uint8)
 
 		#Start
-		a = fd(self)
+		self.a = fd(self)
 
-		a.start()
+		#a.start()
+		cv2.waitKey(3000)
 		self.run()
-		a.stop()
+		self.a.stop()
 		cv2.destroyAllWindows()
 
 	## ------------------------------------------------------------
 	# main function
 	def run(self):
-		run = True
+
+		ret = None
 		iteration = 0
+		while (not ret) and iteration < 500:
+			ret,self.orig_im = self.cap.read()
+			iteration += 1
+
+		self.a.start()
+		run = True
 
 		while(run):
 			# get the video frame from main camera
 			try:
 				ret, self.orig_im = self.cap.read()
-				# flip the image horizontally
-				if ret:
-					self.orig_im = cv2.flip(self.orig_im,1)
 			except Exception as detail:
 				print "error on reading camera: ", detail
 				sys.exit(1)
+			if ret:
+				# flip the image horizontally
+				self.orig_im = cv2.flip(self.orig_im,1)
 
-			#Thread for face detection
-			try:
-				self.thread = self.orig_im.copy()
-			except Exception as detail: print detail, "thread"
+				#Thread for face detection
+				try:
+					self.thread = self.orig_im.copy()
+				except Exception as detail: print detail, "thread"
 
-			skin = self.skinExtraction(self.yCrCbConversion(self.orig_im))
-			skin = cv2.bitwise_not(skin)
+				skin = self.skinExtraction(self.yCrCbConversion(self.orig_im))
+				skin = cv2.bitwise_not(skin)
 
-			# Find the contours
-			contours = cv2.findContours(skin,cv2.RETR_LIST,cv2.CHAIN_APPROX_NONE)[0]
+				# Find the contours
+				contours = cv2.findContours(skin,cv2.RETR_LIST,cv2.CHAIN_APPROX_NONE)[0]
 
 
-			for cnt in contours:
-				# Select the big area
-				if cv2.contourArea(cnt) > 10000:
-					# For each contour, get the hull
-					hull = cv2.convexHull(cnt,returnPoints = False)
-					angles = []
-					# For each contour, get the defects
-					defects = cv2.convexityDefects(cnt,hull)
-					if defects == None: return
-					try:
-						for i in range(defects.shape[0]):
-							s,e,f,d = defects[i,0]
-							if d > 5000: #If the distance from the defect to the hull is greater than 5000
-								start = tuple(cnt[s][0])
-								end = tuple(cnt[e][0])
-								far = tuple(cnt[f][0])
-								angleDefect = self.angle(far, start, end)		#get the angle of the two line outgoing from the defect
-								angles.append(angleDefect)		
-								if angleDefect < 90:
-									cv2.circle(self.orig_im,far,5,[0,0,255],-1)  	#create a dot
-									cv2.line(self.orig_im,start,far,[0,255,0],2) 	#Create a line from the defect to the next hull
-									cv2.line(self.orig_im,far,end,[0,255,0],2)		#Create a line from the hull to the next defect
-									
+				for cnt in contours:
+					# Select the big area
+					if cv2.contourArea(cnt) > 10000:
+						# For each contour, get the hull
+						hull = cv2.convexHull(cnt,returnPoints = False)
+						angles = []
+						# For each contour, get the defects
+						defects = cv2.convexityDefects(cnt,hull)
+						if defects == None: return
+						try:
+							for i in range(defects.shape[0]):
+								s,e,f,d = defects[i,0]
+								if d > 5000: #If the distance from the defect to the hull is greater than 5000
+									start = tuple(cnt[s][0])
+									end = tuple(cnt[e][0])
+									far = tuple(cnt[f][0])
+									angleDefect = self.angle(far, start, end)		#get the angle of the two line outgoing from the defect
+									angles.append(angleDefect)		
+									if angleDefect < 90:
+										cv2.circle(self.orig_im,far,5,[0,0,255],-1)  	#create a dot
+										cv2.line(self.orig_im,start,far,[0,255,0],2) 	#Create a line from the defect to the next hull
+										cv2.line(self.orig_im,far,end,[0,255,0],2)		#Create a line from the hull to the next defect
+										
 
-					except Exception as detail: 
-						print detail
-						#pass
+						except Exception as detail: 
+							print detail
+							#pass
+							
 						
-					
-					self.handCenter(cv2.moments(cnt))
-					
-					b = filter(lambda a:a<90, angles)
-					fingers = len(b) + 1
-					print "finger = ", fingers
+						self.handCenter(cv2.moments(cnt))
+						
+						b = filter(lambda a:a<90, angles)
+						fingers = len(b) + 1
+						print "finger = ", fingers
 
-					
-			# Debuging tools
-			if self.debug:
-				cv2.drawContours(self.orig_im,[cnt],-1,(0,255,0),-1)
-			# output video
-			cv2.imshow('outPut',self.orig_im)
+						
+				# Debuging tools
+				if self.debug:
+					cv2.drawContours(self.orig_im,[cnt],-1,(0,255,0),-1)
+				# output video
+				cv2.imshow('outPut',self.orig_im)
 
-			if cv2.waitKey(1) & 0xFF == ord('q'):
-				save = 0
-				while save != 'y' and save != 'n':
-					print ("Do you want to save? (y/n)")
-					save = raw_input("> ")
-					if save == 'y':
-						self.save()
-						run = False
-					elif save == 'n':
-						run = False
+				if cv2.waitKey(1) & 0xFF == ord('q'):
+					save = 0
+					while save != 'y' and save != 'n':
+						print ("Do you want to save? (y/n)")
+						save = raw_input("> ")
+						if save == 'y':
+							self.save()
+							run = False
+						elif save == 'n':
+							run = False
 			
 		# Release the camera
 		self.cap.release()
