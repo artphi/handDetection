@@ -73,6 +73,8 @@ class HDproject(object):
 		
 
 		#Camera Capture
+		if self.debug:
+			print "DEBUG: Acquiring video"
 		try:
 			self.cap = cv2.VideoCapture(0)
 			if not self.cap.isOpened():
@@ -81,6 +83,7 @@ class HDproject(object):
 		except Exception as detail:
 			print "Error Initialization of the camera: ", detail
 			sys.exit(1)
+		cv2.waitKey(500)
 		self.thread = np.zeros((60,60),np.uint8)
 		self.faceD = np.zeros((60,60),np.uint8)
 
@@ -88,7 +91,6 @@ class HDproject(object):
 		self.a = fd(self)
 
 		#a.start()
-		cv2.waitKey(3000)
 		self.run()
 		self.a.stop()
 		cv2.destroyAllWindows()
@@ -99,9 +101,12 @@ class HDproject(object):
 
 		ret = None
 		iteration = 0
-		while (not ret) and iteration < 500:
+		while not ret:
 			ret,self.orig_im = self.cap.read()
 			iteration += 1
+			if iteration > 600:
+				print "ERROR reading video capture: timeout"
+				sys.exit(1)
 
 		self.a.start()
 		run = True
@@ -111,7 +116,7 @@ class HDproject(object):
 			try:
 				ret, self.orig_im = self.cap.read()
 			except Exception as detail:
-				print "error on reading camera: ", detail
+				print "ERROR reading video capture: ", detail
 				sys.exit(1)
 			if ret:
 				# flip the image horizontally
