@@ -1,3 +1,36 @@
+#-*- coding: utf-8 -*-
+
+"""-----------------------------------------------------------------------------
+HDproject
+Hand detection with OpenCV
+
+Autors: 	Aude Piguet
+			Olivier Francillon
+			Raphael Santos
+Due date:	18.11.2013
+Release:
+
+Notes:
+Please refer to the french document "HDproject - Rapport"
+
+Prerequists:
+	* Python 2.7
+	* OpenCV 2.4.6.1
+
+Usage
+On linux:
+	* $ python HDproject.py [debug]
+	* To stop the program, please use the 'q' key, then on the terminal choose if you 
+	* want to save or not the modifications
+
+Files description
+	* HDproject.py: Main Class
+	* faceDetection.py: Face detection class using haar. Threaded in main class
+	* .config: Config file
+	* haar: folder containing some haar XML
+
+-----------------------------------------------------------------------------"""
+
 import pickle, cv2
 import threading
 import numpy as np
@@ -64,6 +97,7 @@ class HDproject(object):
 	# main function
 	def run(self):
 		run = True
+		iteration = 0
 
 		while(run):
 			# get the video frame from main camera
@@ -79,7 +113,7 @@ class HDproject(object):
 			#Thread for face detection
 			try:
 				self.thread = self.orig_im.copy()
-			except: pass
+			except Exception as detail: print detail, "thread"
 
 			skin = self.skinExtraction(self.yCrCbConversion(self.orig_im))
 			skin = cv2.bitwise_not(skin)
@@ -87,31 +121,34 @@ class HDproject(object):
 			# Find the contours
 			contours = cv2.findContours(skin,cv2.RETR_LIST,cv2.CHAIN_APPROX_NONE)[0]
 
-			allIdex = []
-			index_ = 0
+
 			for cnt in contours:
 				# Select the big area
 				if cv2.contourArea(cnt) > 10000:
-					
+					# For each contour, get the hull
 					hull = cv2.convexHull(cnt,returnPoints = False)
 					angles = []
+					# For each contour, get the defects
 					defects = cv2.convexityDefects(cnt,hull)
 					if defects == None: return
 					try:
 						for i in range(defects.shape[0]):
 							s,e,f,d = defects[i,0]
-							if d > 2000:
+							if d > 5000: #If the distance from the defect to the hull is greater than 5000
 								start = tuple(cnt[s][0])
 								end = tuple(cnt[e][0])
 								far = tuple(cnt[f][0])
-								cv2.circle(self.orig_im,far,5,[0,0,255],-1)
-								cv2.line(self.orig_im,start,far,[0,255,0],2)
-								cv2.line(self.orig_im,far,end,[0,255,0],2)
-								angles.append(self.angle(far, start, end))
+								angleDefect = self.angle(far, start, end)		#get the angle of the two line outgoing from the defect
+								angles.append(angleDefect)		
+								if angleDefect < 90:
+									cv2.circle(self.orig_im,far,5,[0,0,255],-1)  	#create a dot
+									cv2.line(self.orig_im,start,far,[0,255,0],2) 	#Create a line from the defect to the next hull
+									cv2.line(self.orig_im,far,end,[0,255,0],2)		#Create a line from the hull to the next defect
+									
 
 					except Exception as detail: 
 						print detail
-						pass
+						#pass
 						
 					
 					self.handCenter(cv2.moments(cnt))
@@ -120,7 +157,7 @@ class HDproject(object):
 					fingers = len(b) + 1
 					print "finger = ", fingers
 
-					index_ += 1
+					
 			# Debuging tools
 			if self.debug:
 				cv2.drawContours(self.orig_im,[cnt],-1,(0,255,0),-1)
@@ -224,12 +261,11 @@ class HDproject(object):
 
 	## ------------------------------------------------------------
 	def skinExtraction(self,image):
-		y_img = self.thresolding(image[0],self.th_Y_min, self.th_Y_max)
-		cr_img = self.thresolding(image[1],self.th_CR_min, self.th_CR_max)
-		cb_img = self.thresolding(image[2],self.th_CB_min, self.th_CB_max)
-		final = cv2.add(cb_img,cr_img)
-		
 		try:
+			y_img = self.thresolding(image[0],self.th_Y_min, self.th_Y_max)
+			cr_img = self.thresolding(image[1],self.th_CR_min, self.th_CR_max)
+			cb_img = self.thresolding(image[2],self.th_CB_min, self.th_CB_max)
+			final = cv2.add(cb_img,cr_img)
 			final = cv2.add(final,self.faceD)
 		except Exception as detail: print "error on mask ", detail
 
