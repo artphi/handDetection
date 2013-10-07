@@ -19,7 +19,7 @@ Prerequists:
 
 Usage
 On linux:
-	* $ python HDproject.py [debug]
+	* $ python HDproject.py [debug [face, mask, all]]
 	* To stop the program, please use the 'q' key, then on the terminal choose if you 
 	* want to save or not the modifications
 
@@ -61,9 +61,20 @@ class HDproject(object):
 	def __init__(self):
 
 		self.debug = False
-		if len(sys.argv) == 2:
-			if sys.argv[1] == 'debug':
-				self.debug = True
+		self.debugFace = False
+		self.debugMask = False
+		if len(sys.argv) > 1:
+			for deb in sys.argv :
+				if deb == 'debug':
+					self.debug = True
+				if deb == 'face' and self.debug == True:
+					self.debugFace = True
+				if deb == 'mask' and self.debug == True :
+					self.debugMask = True
+				if deb == 'all' and self.debug == True:
+					self.debugFace = True
+					self.debugMask = True
+
 				print "Debug mode"
 		#Loading from .config
 		try:  self.Vars = pickle.load(open(".config", "r"))
@@ -311,7 +322,7 @@ class HDproject(object):
 		
 		
 
-		if self.debug:
+		if self.debug and self.debugMask:
 			cv2.imshow('y_img_mask',y_img)
 			cv2.imshow('cr_img_mask',cr_img)
 			cv2.imshow('cb_img_mask',cb_img)

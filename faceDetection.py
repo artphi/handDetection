@@ -1,7 +1,6 @@
-import pickle, cv2
+import cv2
 import threading
 import numpy as np
-import sys
 class FaceDetection(threading.Thread):
 	def __init__(self, parent):
 		threading.Thread.__init__(self)
@@ -9,7 +8,6 @@ class FaceDetection(threading.Thread):
 		self._stopevent = threading.Event( )
 		self.parent = parent
 	def run(self):
-		i = 0
 		while not self._stopevent.isSet():
 			#try/catch
 			try:
@@ -26,7 +24,7 @@ class FaceDetection(threading.Thread):
 				self.parent.faceD = mask
 			except:
 				print "boaf"
-			if self.parent.debug:
+			if self.parent.debug and self.parent.debugFace:
 				cv2.imshow('FaceDetect',cv2.bitwise_not(mask))
 			
 		print "le thread "+self.nom +" s'est termine proprement"
