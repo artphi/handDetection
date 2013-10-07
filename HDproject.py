@@ -140,6 +140,12 @@ class HDproject(object):
 			if ret:
 				# flip the image horizontally
 				self.orig_im = cv2.flip(self.orig_im,1)
+				size = self.orig_im.shape
+				if size[1] > 640:
+					new_size = np.copy(size)
+					new_size[1] = 640
+					new_size[0] = float(size[0])/(float(size[1])/float(new_size[1]))
+					self.orig_im = cv2.resize(self.orig_im, (new_size[1], new_size[0]))
 
 				#Thread for face detection
 				try:
