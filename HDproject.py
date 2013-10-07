@@ -119,6 +119,7 @@ class HDproject(object):
 
 		ret = None
 		iteration = 0
+		fingers = 0
 		while not ret:
 			ret,self.orig_im = self.cap.read()
 			iteration += 1
@@ -186,12 +187,12 @@ class HDproject(object):
 						b = filter(lambda a:a<90, angles)
 						fingers = len(b) + 1
 						print "finger = ", fingers
-
 						
 				# Debuging tools
 				if self.debug:
 					cv2.drawContours(self.orig_im,[cnt],-1,(0,255,0),-1)
 				# output video
+				cv2.putText(self.orig_im, "fingers = " + `fingers`, (10,20), cv2.FONT_HERSHEY_PLAIN, 1, [255,255,255])
 				cv2.imshow('outPut',self.orig_im)
 
 				if cv2.waitKey(1) & 0xFF == ord('q'):
