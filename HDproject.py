@@ -205,9 +205,9 @@ class HDproject(object):
 						fingers = len(b) + 1
 						print "finger = ", fingers
 						
-				# Debuging tools
-				if self.debug:
-					cv2.drawContours(self.orig_im,[cnt],-1,(0,255,0),-1)
+					# Debuging tools
+					if self.debug:
+						cv2.drawContours(self.orig_im,[cnt],-1,(0,255,0),-1)
 				# output video
 				cv2.putText(self.orig_im, "fingers = " + `fingers`, (10,20), cv2.FONT_HERSHEY_PLAIN, 1, [255,255,255])
 				cv2.imshow('outPut',self.orig_im)
