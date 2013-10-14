@@ -19,9 +19,10 @@ Prerequists:
 
 Usage
 On linux:
-	* $ python HDproject.py [debug [face, mask, all]]
+	* $ python HDproject.py [config [path]][debug [face, mask, all]]
 	* To stop the program, please use the 'q' key, then on the terminal choose if you 
-	* want to save or not the modifications
+	  want to save or not the modifications
+	* 
 
 Files description
 	* HDproject.py: Main Class
@@ -63,8 +64,15 @@ class HDproject(object):
 		self.debug = False
 		self.debugFace = False
 		self.debugMask = False
+		self.conf = ".config"
 		if len(sys.argv) > 1:
+			confArg = False
 			for deb in sys.argv :
+				if confArg:
+					self.conf = deb
+					confArg = False
+				if deb == 'config':
+					confArg = True
 				if deb == 'debug':
 					self.debug = True
 				if deb == 'face' and self.debug == True:
@@ -74,12 +82,14 @@ class HDproject(object):
 				if deb == 'all' and self.debug == True:
 					self.debugFace = True
 					self.debugMask = True
+				
+
 
 				print "Debug mode"
 		#Loading from .config
-		try:  self.Vars = pickle.load(open(".config", "r"))
+		try:  self.Vars = pickle.load(open(self.conf, "r"))
 		except:
-			print "Config file (\".config\") not found."
+			print "Config file (" + self.conf + ") not found."
 			exit()
 
 		self.th_Y_min = self.Vars["th_Y_min"]

@@ -28,7 +28,7 @@ Prerequists
 Usage
 -----
 On linux:
-	* $ python HDproject.py [debug [face, mask, all]]
+	* $ python HDproject.py [config [path]][debug [face, mask, all]]
 	* To stop the program, please use the 'q' key, then on the terminal choose if you 
 	* want to save or not the modifications
 
