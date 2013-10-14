@@ -195,7 +195,7 @@ class HDproject(object):
 										
 
 						except Exception as detail: 
-							print detail
+							print "contour error: ",detail
 							#pass
 							
 						
@@ -243,7 +243,7 @@ class HDproject(object):
 			cv2.circle(self.orig_im, (centroid_x, centroid_y), 15, (0,0,255), 1)
 			cv2.circle(self.orig_im, (centroid_x, centroid_y), 10, (0,0,255), 1)
 			cv2.circle(self.orig_im, (centroid_x, centroid_y), 5, (0,0,255), -1)
-		except Exception as detail: print detail
+		except Exception as detail: print "Hand center error: ",detail
 
 	## ------------------------------------------------------------
 	# Save the parameters
@@ -278,7 +278,9 @@ class HDproject(object):
 				# cv2.imshow('Cr',splitted[1])
 				# cv2.imshow('Cb',splitted[2])
 			return splitted
-		except: pass
+		except Exception as detail: 
+			print "Error in yCrCbConversion: ",detail
+			pass
 
 	## ------------------------------------------------------------
 	# not implemented... Maybe one day...
