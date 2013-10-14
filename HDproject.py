@@ -265,7 +265,7 @@ class HDproject(object):
 		self.Vars["th_CB_min"] = self.th_CB_min
 		self.Vars["th_CB_max"] = self.th_CB_max
 		self.Vars["blur"] = self.blur
-		pickle.dump(self.Vars, open(".config", "w"))
+		pickle.dump(self.Vars, open(self.config, "w"))
 		
 
 	## ------------------------------------------------------------
