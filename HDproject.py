@@ -132,7 +132,6 @@ class HDproject(object):
 		#a.start()
 		self.run()
 		self.a.stop()
-		cv2.destroyAllWindows()
 
 	## ------------------------------------------------------------
 	# main function
@@ -223,6 +222,7 @@ class HDproject(object):
 				cv2.imshow('outPut',self.orig_im)
 
 				if cv2.waitKey(1) & 0xFF == ord('q'):
+					cv2.destroyAllWindows()
 					save = 0
 					while save != 'y' and save != 'n':
 						print ("Do you want to save? (y/n)")
